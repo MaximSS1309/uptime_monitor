@@ -24,6 +24,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://monitor_user:monitor_pass@postgres:5432/site_monitor
       DEBUG: "false"
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
     ports:
       - "8000:8000"
     depends_on:
