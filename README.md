@@ -1,5 +1,7 @@
 # Uptime Monitor
 
+![Tests](https://github.com/MaximSS1309/uptime_monitor/actions/workflows/tests.yml/badge.svg)
+
 Асинхронний сервіс моніторингу доступності сайтів на FastAPI. Періодично перевіряє
 список сайтів, зберігає історію перевірок у PostgreSQL і надає REST API для управління
 списком сайтів та перегляду логів.
