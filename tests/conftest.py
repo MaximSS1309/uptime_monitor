@@ -1,7 +1,7 @@
 import os
+
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-pytest-at-least-32-bytes")
 
-import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import event
@@ -20,6 +20,8 @@ test_engine = create_async_engine(
 )
 
 TestSessionLocal = async_sessionmaker(bind=test_engine, expire_on_commit=False)
+
+PASSWORD = "supersecret123"
 
 
 @event.listens_for(test_engine.sync_engine, "connect")
@@ -56,3 +58,27 @@ async def client():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+async def _make_authenticated_client(email: str) -> AsyncClient:
+    ac = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+    await ac.post("/auth/register", json={"email": email, "password": PASSWORD})
+    response = await ac.post(
+        "/auth/login", data={"username": email, "password": PASSWORD}
+    )
+    ac.headers["Authorization"] = f"Bearer {response.json()['access_token']}"
+    return ac
+
+
+@pytest_asyncio.fixture
+async def auth_client():
+    ac = await _make_authenticated_client("owner@example.com")
+    yield ac
+    await ac.aclose()
+
+
+@pytest_asyncio.fixture
+async def other_client():
+    ac = await _make_authenticated_client("other@example.com")
+    yield ac
+    await ac.aclose()

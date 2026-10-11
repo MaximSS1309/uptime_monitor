@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Integer, String, Boolean, ForeignKey, DateTime, UniqueConstraint
 from app.database import Base
 
 
@@ -16,17 +16,18 @@ class User(Base):
 
 class Site(Base):
     __tablename__ = "sites"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "url", name="uq_sites_owner_url"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    url: Mapped[str] = mapped_column(String, unique=True)
+    url: Mapped[str] = mapped_column(String)                 # без unique=True
     name: Mapped[str] = mapped_column(String)
     status_code: Mapped[int | None] = mapped_column(nullable=True)
     is_online: Mapped[bool] = mapped_column(default=True)
-    owner_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-    owner: Mapped["User | None"] = relationship(back_populates="sites")
+    owner: Mapped["User"] = relationship(back_populates="sites")
     logs: Mapped[list["CheckLog"]] = relationship(
         back_populates="site",
         cascade="all, delete-orphan",

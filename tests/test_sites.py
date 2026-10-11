@@ -1,5 +1,9 @@
 import pytest
+import pytest_asyncio
 
+@pytest_asyncio.fixture
+async def client(auth_client):
+    return auth_client
 
 async def create_site(client, name="Example", url="https://example.com"):
     response = await client.post("/sites/", json={"name": name, "url": url})
